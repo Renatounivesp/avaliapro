@@ -1,0 +1,87 @@
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id           String        @id @default(uuid())
+  name         String
+  email        String        @unique
+  password     String
+  role         String        @default("USER") // USER | ADMIN
+  status       String        @default("ACTIVE") // ACTIVE | BLOCKED
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  company      Company?
+  subscription Subscription?
+}
+
+model Company {
+  id                 String      @id @default(uuid())
+  userId             String      @unique
+  user               User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name               String
+  slug               String      @unique // Utilizado no link público /p/[slug]
+  logoUrl            String?     // Imagem em Base64 ou URL de upload
+  googleReviewUrl    String
+  customPhrase       String      @default("Como foi sua experiência conosco?")
+  primaryColor       String      @default("#4F46E5") // Indigo-600
+  secondaryColor     String      @default("#06B6D4") // Cyan-500
+  textColor          String      @default("#1F2937") // Gray-800
+  bgColor            String      @default("#F9FAFB") // Gray-50
+  satisfactionFilter Boolean     @default(true)
+  createdAt          DateTime    @default(now())
+  updatedAt          DateTime    @updatedAt
+  feedbacks          Feedback[]
+  analytics          Analytics[]
+}
+
+model Feedback {
+  id            String   @id @default(uuid())
+  companyId     String
+  company       Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  customerName  String
+  customerEmail String?
+  customerPhone String?
+  rating        String   // RUIM | PESSIMA
+  comments      String
+  status        String   @default("PENDENTE") // PENDENTE | EM_CONTATO | RESOLVIDO
+  createdAt     DateTime @default(now())
+}
+
+model Analytics {
+  id        String   @id @default(uuid())
+  companyId String
+  company   Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  type      String   // VISIT | CLICK
+  rating    String?  // EXCELENTE | BOA | RUIM | PESSIMA
+  device    String   @default("DESKTOP") // DESKTOP | MOBILE | TABLET
+  createdAt DateTime @default(now())
+}
+
+model Subscription {
+  id                    String    @id @default(uuid())
+  userId                String    @unique
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  status                String    @default("PENDING") // ACTIVE | OVERDUE | CANCELED | PENDING
+  price                 Float     @default(9.90)
+  expiresAt             DateTime
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+  gatewaySubscriptionId String?   // Mock de ID do Stripe/MercadoPago
+  payments              Payment[]
+}
+
+model Payment {
+  id             String       @id @default(uuid())
+  subscriptionId String
+  subscription   Subscription @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+  amount         Float        @default(9.90)
+  status         String       // APPROVED | PENDING | FAILED
+  gateway        String       // STRIPE | MERCADOPAGO | SIMULATOR
+  createdAt      DateTime     @default(now())
+}
