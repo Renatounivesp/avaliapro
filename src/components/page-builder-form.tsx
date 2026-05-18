@@ -181,20 +181,6 @@ export default function PageBuilderForm({ initialCompany }: PageBuilderFormProps
         <p className="text-muted-foreground text-sm">Defina a identidade visual, logo e o link da sua empresa.</p>
       </div>
 
-      {error && (
-        <div className="p-4 bg-rose-500/10 border border-rose-500/20 text-rose-500 rounded-2xl flex items-start gap-2.5 text-sm">
-          <AlertCircle className="w-5 h-5 shrink-0 mt-0.5" />
-          <span>{error}</span>
-        </div>
-      )}
-
-      {success && (
-        <div className="p-4 bg-emerald-500/10 border border-emerald-500/20 text-emerald-500 rounded-2xl flex items-start gap-2.5 text-sm">
-          <CheckCircle2 className="w-5 h-5 shrink-0 mt-0.5" />
-          <span>{success}</span>
-        </div>
-      )}
-
       <div className="grid lg:grid-cols-12 gap-8 items-start">
         
         {/* COLUNA ESQUERDA (FORMULÁRIO CONSTRUTOR) */}
@@ -386,6 +372,20 @@ export default function PageBuilderForm({ initialCompany }: PageBuilderFormProps
               }`}></span>
             </button>
           </div>
+
+          {error && (
+            <div className="p-4 bg-rose-500/10 border border-rose-500/20 text-rose-500 rounded-2xl flex items-start gap-2.5 text-sm animate-in fade-in slide-in-from-bottom duration-200">
+              <AlertCircle className="w-5 h-5 shrink-0 mt-0.5" />
+              <span>{error}</span>
+            </div>
+          )}
+
+          {success && (
+            <div className="p-4 bg-emerald-500/10 border border-emerald-500/20 text-emerald-500 rounded-2xl flex items-start gap-2.5 text-sm animate-in fade-in slide-in-from-bottom duration-200">
+              <CheckCircle2 className="w-5 h-5 shrink-0 mt-0.5" />
+              <span>{success}</span>
+            </div>
+          )}
 
           <button
             type="submit"
