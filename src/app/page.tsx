@@ -140,7 +140,7 @@ export default function LandingPage() {
                 Gere QR Codes e páginas personalizadas para incentivar avaliações 5 estrelas. Nosso filtro inteligente envia elogios direto para o Google e retém as reclamações em um formulário privado só para você ler.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center md:justify-start">
-                <Link href="/register" className="font-bold bg-primary hover:bg-primary/95 text-white px-8 py-4 rounded-xl text-md flex items-center justify-center gap-2 shadow-xl hover:shadow-2xl transition-all glow-hover">
+                <Link href="/register" className="font-bold bg-primary hover:bg-primary/95 text-white px-8 py-4 rounded-xl text-md flex items-center justify-center gap-2 shadow-xl hover:shadow-2xl transition-all glow-button-primary">
                   Começar Agora por R$ 9,90 <ArrowRight className="w-5 h-5" />
                 </Link>
                 <a href="#como-funciona" className="font-semibold border border-border hover:bg-foreground/5 text-foreground px-8 py-4 rounded-xl text-md flex items-center justify-center gap-2 transition-all">
@@ -235,13 +235,13 @@ export default function LandingPage() {
 
           <div className="grid md:grid-cols-2 gap-8 items-stretch">
             {/* FLUXO POSITIVO */}
-            <div className="glass-card p-8 rounded-3xl relative overflow-hidden flex flex-col justify-between border border-emerald-500/10">
-              <div className="absolute top-0 right-0 w-24 h-24 bg-emerald-500/5 rounded-full blur-2xl"></div>
+            <div className="glass-card p-8 rounded-3xl relative overflow-hidden flex flex-col justify-between border border-emerald-500/10 lift-card-hover lift-card-hover-emerald group transition-all duration-300">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/5 rounded-full blur-3xl group-hover:bg-emerald-500/15 group-hover:scale-125 transition-all duration-500"></div>
               <div>
-                <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 text-emerald-500 flex items-center justify-center mb-6">
-                  <Star className="w-6 h-6 fill-emerald-500 text-emerald-500" />
+                <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 text-emerald-500 flex items-center justify-center mb-6 group-hover:scale-110 group-hover:bg-emerald-500/20 transition-all duration-300 shadow-md">
+                  <Star className="w-6 h-6 fill-emerald-500 text-emerald-500 group-hover:rotate-12 transition-transform duration-300" />
                 </div>
-                <h3 className="text-2xl font-bold mb-4 flex items-center gap-2">
+                <h3 className="text-2xl font-bold mb-4 flex items-center gap-2 group-hover:text-emerald-500 transition-colors duration-300">
                   Avaliação 4 ou 5 Estrelas <span className="text-emerald-500">⭐⭐⭐⭐⭐</span>
                 </h3>
                 <p className="text-muted-foreground leading-relaxed">
@@ -259,13 +259,13 @@ export default function LandingPage() {
             </div>
 
             {/* FLUXO NEGATIVO */}
-            <div className="glass-card p-8 rounded-3xl relative overflow-hidden flex flex-col justify-between border border-rose-500/10">
-              <div className="absolute top-0 right-0 w-24 h-24 bg-rose-500/5 rounded-full blur-2xl"></div>
+            <div className="glass-card p-8 rounded-3xl relative overflow-hidden flex flex-col justify-between border border-rose-500/10 lift-card-hover lift-card-hover-rose group transition-all duration-300">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-rose-500/5 rounded-full blur-3xl group-hover:bg-rose-500/15 group-hover:scale-125 transition-all duration-500"></div>
               <div>
-                <div className="w-12 h-12 rounded-2xl bg-rose-500/10 text-rose-500 flex items-center justify-center mb-6">
-                  <Shield className="w-6 h-6" />
+                <div className="w-12 h-12 rounded-2xl bg-rose-500/10 text-rose-500 flex items-center justify-center mb-6 group-hover:scale-110 group-hover:bg-rose-500/20 transition-all duration-300 shadow-md">
+                  <Shield className="w-6 h-6 group-hover:rotate-12 transition-transform duration-300" />
                 </div>
-                <h3 className="text-2xl font-bold mb-4 flex items-center gap-2">
+                <h3 className="text-2xl font-bold mb-4 flex items-center gap-2 group-hover:text-rose-500 transition-colors duration-300">
                   Avaliação de 1, 2 ou 3 Estrelas <span className="text-rose-500">⭐⭐⭐</span>
                 </h3>
                 <p className="text-muted-foreground leading-relaxed">

@@ -224,3 +224,56 @@ body {
 .transition-theme {
   transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease, box-shadow 0.3s ease;
 }
+
+/* Efeito Premium de Elevação e Brilho no Hover (Cara de App) */
+.lift-card-hover {
+  transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.lift-card-hover:hover {
+  transform: translateY(-8px);
+}
+
+.lift-card-hover-emerald:hover {
+  border-color: rgba(16, 185, 129, 0.3) !important;
+  background: rgba(16, 185, 129, 0.03) !important;
+  box-shadow: 0 30px 60px -15px rgba(16, 185, 129, 0.15), inset 0 1px 0 0 rgba(255, 255, 255, 0.05);
+}
+
+.lift-card-hover-rose:hover {
+  border-color: rgba(244, 63, 94, 0.3) !important;
+  background: rgba(244, 63, 94, 0.03) !important;
+  box-shadow: 0 30px 60px -15px rgba(244, 63, 94, 0.15), inset 0 1px 0 0 rgba(255, 255, 255, 0.05);
+}
+
+.lift-card-hover-primary:hover {
+  border-color: rgba(99, 102, 241, 0.3) !important;
+  box-shadow: 0 30px 60px -15px rgba(99, 102, 241, 0.15), inset 0 1px 0 0 rgba(255, 255, 255, 0.05);
+}
+
+/* Glow Premium para Botões CTA */
+.glow-button-primary {
+  position: relative;
+  transition: all 0.3s ease;
+}
+
+.glow-button-primary::after {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  background: linear-gradient(90deg, #4f46e5, #06b6d4);
+  border-radius: inherit;
+  z-index: -1;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.glow-button-primary:hover::after {
+  opacity: 1;
+}
+
+.glow-button-primary:hover {
+  box-shadow: 0 0 25px rgba(79, 70, 229, 0.5);
+  transform: scale(1.02);
+}
+
