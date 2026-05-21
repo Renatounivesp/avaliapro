@@ -29,8 +29,8 @@ model Company {
   logoUrl            String?     // Imagem em Base64 ou URL de upload
   googleReviewUrl    String
   customPhrase       String      @default("Como foi sua experiência conosco?")
-  primaryColor       String      @default("#4F46E5") // Indigo-600
-  secondaryColor     String      @default("#06B6D4") // Cyan-500
+  primaryColor       String      @default("#4285F4") // Azul Google
+  secondaryColor     String      @default("#FBBC05") // Amarelo Google
   textColor          String      @default("#1F2937") // Gray-800
   bgColor            String      @default("#F9FAFB") // Gray-50
   satisfactionFilter Boolean     @default(true)
