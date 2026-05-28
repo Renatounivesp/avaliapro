@@ -54,8 +54,8 @@ export default function BillingControl({ subscription }: BillingControlProps) {
   const subStatus = subscription.status;
   const isSubActive = subStatus === 'ACTIVE';
 
-  const PIX_KEY = 'pix@avaliapro.com.br';
-  const PIX_CODE = '00020101021126580014br.gov.bcb.pix0136pix@avaliapro.com.br52040000530398654049.905802BR5915AvaliaPro SaaS6009Sao Paulo62070503***63041A2F';
+  const PIX_KEY = '12981348331';
+  const PIX_CODE = '00020101021126580014br.gov.bcb.pix01111298134833152040000530398654049.905802BR5915AvaliaPro SaaS6009Sao Paulo62070503***6304CA27';
 
   useEffect(() => {
     if (searchParams.get('status') === 'success') {
@@ -276,7 +276,7 @@ export default function BillingControl({ subscription }: BillingControlProps) {
                       <div className="space-y-1.5 flex-grow w-full">
                         <h4 className="font-extrabold text-xs">Pagar com Pix</h4>
                         <p className="text-[10px] text-muted-foreground leading-relaxed">
-                          Escaneie o QR Code ou copie o código Pix abaixo. Após o pagamento de <strong>R$ 9,90</strong> no app do seu banco, confirme a ativação.
+                          Escaneie o QR Code ou copie o código Pix abaixo. O pagamento de <strong>R$ 9,90</strong> será destinado para a chave Pix celular: <strong>{PIX_KEY}</strong> (Nubank). Após pagar, clique em confirmar para ativar sua conta na hora.
                         </p>
                         
                         <div className="flex gap-1.5 items-center">
