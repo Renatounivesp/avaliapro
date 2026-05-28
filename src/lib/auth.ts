@@ -128,6 +128,15 @@ export async function getSessionUser() {
       return null;
     }
 
+    // --- AUTOMATIC BILLING EXPIRATION CHECK ---
+    if (user.subscription && user.subscription.status === 'ACTIVE' && user.subscription.expiresAt < new Date()) {
+      const updatedSub = await db.subscription.update({
+        where: { id: user.subscription.id },
+        data: { status: 'OVERDUE' },
+      });
+      user.subscription = updatedSub;
+    }
+
     return user;
   } catch {
     return null;

@@ -50,8 +50,21 @@ export default async function PublicPage({
     );
   }
 
+  // --- AUTOMATIC BILLING EXPIRATION CHECK FOR PUBLIC PAGE ---
+  if (company.user.subscription && company.user.subscription.status === 'ACTIVE' && company.user.subscription.expiresAt < new Date()) {
+    const updatedSub = await db.subscription.update({
+      where: { id: company.user.subscription.id },
+      data: { status: 'OVERDUE' },
+    });
+    company.user.subscription = updatedSub;
+  }
+
   // --- SE ASSINATURA NÃO ESTÁ ATIVA: BLOQUEIA AVALIAÇÃO COM AVISO DE ASSINATURA PENDENTE ---
-  const isSubscriptionActive = company.user.subscription?.status === 'ACTIVE';
+  const sub = company.user.subscription;
+  const isSubscriptionActive = sub && (
+    sub.status === 'ACTIVE' || 
+    (sub.status === 'PENDING' && new Date(sub.expiresAt) > new Date())
+  );
 
   if (!isSubscriptionActive) {
     return (

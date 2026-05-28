@@ -43,7 +43,8 @@ export default function DashboardShell({ children, user }: DashboardShellProps) 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const subStatus = user.subscription?.status || 'PENDING';
-  const isSubscriptionActive = subStatus === 'ACTIVE';
+  const expiresAt = user.subscription?.expiresAt ? new Date(user.subscription.expiresAt) : null;
+  const isSubscriptionActive = subStatus === 'ACTIVE' || (subStatus === 'PENDING' && expiresAt && expiresAt > new Date());
 
   // Páginas protegidas pelo paywall
   const isPaywalledPath = 

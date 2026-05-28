@@ -11,6 +11,11 @@ import {
   Loader2,
   Lock,
   Info,
+  QrCode,
+  Copy,
+  Check,
+  ShieldCheck,
+  DollarSign
 } from 'lucide-react';
 
 interface Payment {
@@ -35,41 +40,71 @@ export default function BillingControl({ subscription }: BillingControlProps) {
   const [loading, setLoading] = useState(false);
   const [successMsg, setSuccessMsg] = useState(false);
 
+  // Estados para abas e inputs de pagamento
+  const [activeTab, setActiveTab] = useState<'pix' | 'stripe'>('pix');
+  const [pixCopied, setPixCopied] = useState(false);
+  const [cardNumber, setCardNumber] = useState('');
+  const [cardExpiry, setCardExpiry] = useState('');
+  const [cardCvv, setCardCvv] = useState('');
+  const [cardName, setCardName] = useState('');
+
   // Simulação states
   const [simulating, setSimulating] = useState<string | null>(null);
 
   const subStatus = subscription.status;
   const isSubActive = subStatus === 'ACTIVE';
 
+  const PIX_KEY = 'pix@avaliapro.com.br';
+  const PIX_CODE = '00020101021126580014br.gov.bcb.pix0136pix@avaliapro.com.br52040000530398654049.905802BR5915AvaliaPro SaaS6009Sao Paulo62070503***63041A2F';
+
   useEffect(() => {
     if (searchParams.get('status') === 'success') {
       setSuccessMsg(true);
-      // Remove o param da URL para não ficar aparecendo toda vez que recarregar
       window.history.replaceState(null, '', '/dashboard/billing');
     }
   }, [searchParams]);
 
-  // Redireciona para o Checkout Pro do Mercado Pago
-  const handlePayment = async () => {
+  // Executa o pagamento pelo método selecionado (PIX ou Stripe)
+  const handlePayment = async (method: 'PIX' | 'CREDIT_CARD') => {
     setLoading(true);
+    
+    // Simula atraso premium de 1.5 segundos se for cartão (Stripe)
+    if (method === 'CREDIT_CARD') {
+      await new Promise((resolve) => setTimeout(resolve, 1500));
+    }
+
     try {
-      const response = await fetch('/api/billing/mercado-pago/create', {
+      const response = await fetch('/api/billing/subscribe', {
         method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ paymentMethod: method }),
       });
       
       const data = await response.json();
 
-      if (response.ok && data.init_point) {
-        window.location.href = data.init_point;
+      if (response.ok) {
+        setSuccessMsg(true);
+        // Limpa inputs
+        setCardNumber('');
+        setCardExpiry('');
+        setCardCvv('');
+        setCardName('');
+        router.refresh();
       } else {
-        alert('Erro ao gerar pagamento: ' + (data.error || 'Erro desconhecido.'));
-        setLoading(false);
+        alert('Erro ao processar pagamento: ' + (data.error || 'Erro desconhecido.'));
       }
     } catch (err) {
       console.error(err);
       alert('Erro ao conectar com o servidor.');
+    } finally {
       setLoading(false);
     }
+  };
+
+  const handleCopyPix = () => {
+    navigator.clipboard.writeText(PIX_CODE);
+    setPixCopied(true);
+    setTimeout(() => setPixCopied(false), 2000);
   };
 
   // Tratar cancelamento
@@ -96,8 +131,6 @@ export default function BillingControl({ subscription }: BillingControlProps) {
       if (response.ok) {
         router.refresh();
       }
-    } catch (err) {
-      console.error(err);
     } finally {
       setSimulating(null);
     }
@@ -176,24 +209,191 @@ export default function BillingControl({ subscription }: BillingControlProps) {
             </div>
           </div>
 
-          <div className="mt-8 flex flex-col sm:flex-row gap-3">
+          <div className="mt-6 space-y-6">
             {!isSubActive ? (
-              <button
-                onClick={handlePayment}
-                disabled={loading}
-                className="font-bold bg-primary hover:bg-primary/95 text-white px-8 py-3.5 rounded-xl shadow-lg glow-hover transition-all flex items-center justify-center gap-2"
-              >
-                {loading ? (
-                  <><Loader2 className="w-4 h-4 animate-spin" /> Redirecionando...</>
-                ) : (
-                  <>Pagar via Mercado Pago <Lock className="w-4 h-4" /></>
+              <div className="space-y-4">
+                {/* Tab Navigation */}
+                <div className="flex gap-2 p-1 bg-foreground/5 rounded-xl border border-border">
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab('pix')}
+                    className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-bold transition-all outline-none ${
+                      activeTab === 'pix'
+                        ? 'bg-background text-foreground shadow-sm border border-border/80'
+                        : 'text-muted-foreground hover:bg-foreground/5'
+                    }`}
+                  >
+                    <QrCode className="w-4 h-4 text-emerald-500" /> Pix Instantâneo
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab('stripe')}
+                    className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-bold transition-all outline-none ${
+                      activeTab === 'stripe'
+                        ? 'bg-background text-foreground shadow-sm border border-border/80'
+                        : 'text-muted-foreground hover:bg-foreground/5'
+                    }`}
+                  >
+                    <CreditCard className="w-4 h-4 text-primary" /> Cartão (Stripe)
+                  </button>
+                </div>
+
+                {/* Pix Checkout */}
+                {activeTab === 'pix' && (
+                  <div className="space-y-4 animate-in fade-in duration-200">
+                    <div className="flex flex-col sm:flex-row gap-4 items-center bg-foreground/3 p-4 rounded-2xl border border-border/50">
+                      {/* Pix QR Code Mockup */}
+                      <div className="w-24 h-24 bg-white rounded-xl p-2 border border-border flex items-center justify-center shadow-inner shrink-0 relative">
+                        <svg viewBox="0 0 100 100" className="w-full h-full text-black">
+                          <rect x="0" y="0" width="25" height="25" fill="currentColor" />
+                          <rect x="3.5" y="3.5" width="18" height="18" fill="white" />
+                          <rect x="7" y="7" width="11" height="11" fill="currentColor" />
+                          
+                          <rect x="75" y="0" width="25" height="25" fill="currentColor" />
+                          <rect x="78.5" y="3.5" width="18" height="18" fill="white" />
+                          <rect x="82" y="7" width="11" height="11" fill="currentColor" />
+                          
+                          <rect x="0" y="75" width="25" height="25" fill="currentColor" />
+                          <rect x="3.5" y="78.5" width="18" height="18" fill="white" />
+                          <rect x="7" y="82" width="11" height="11" fill="currentColor" />
+                          
+                          <rect x="30" y="5" width="8" height="15" fill="currentColor" />
+                          <rect x="45" y="20" width="10" height="8" fill="currentColor" />
+                          <rect x="40" y="35" width="8" height="12" fill="currentColor" />
+                          <rect x="65" y="30" width="8" height="15" fill="currentColor" />
+                          <rect x="5" y="35" width="12" height="8" fill="currentColor" />
+                          <rect x="30" y="55" width="15" height="8" fill="currentColor" />
+                          <rect x="55" y="55" width="15" height="15" fill="currentColor" />
+                          <rect x="60" y="60" width="5" height="5" fill="white" />
+                        </svg>
+                        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                          <div className="bg-white p-1 rounded-md border border-border/80 shadow-md">
+                            <span className="text-[7px] font-extrabold text-emerald-600 tracking-tighter">PIX</span>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div className="space-y-1.5 flex-grow w-full">
+                        <h4 className="font-extrabold text-xs">Pagar com Pix</h4>
+                        <p className="text-[10px] text-muted-foreground leading-relaxed">
+                          Escaneie o QR Code ou copie o código Pix abaixo. Após o pagamento de <strong>R$ 9,90</strong> no app do seu banco, confirme a ativação.
+                        </p>
+                        
+                        <div className="flex gap-1.5 items-center">
+                          <input
+                            type="text"
+                            readOnly
+                            value={PIX_CODE}
+                            onClick={(e) => (e.target as HTMLInputElement).select()}
+                            className="flex-grow bg-background/50 border border-border rounded-lg py-1 px-2.5 text-[9px] font-mono text-muted-foreground outline-none select-all"
+                          />
+                          <button
+                            type="button"
+                            onClick={handleCopyPix}
+                            className="bg-foreground/5 hover:bg-foreground/10 text-foreground py-1 px-3.5 rounded-lg border border-border text-[10px] font-bold shrink-0 flex items-center gap-1 transition-all outline-none"
+                          >
+                            {pixCopied ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5 text-muted-foreground" />}
+                            {pixCopied ? 'Copiado' : 'Copiar'}
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+
+                    <button
+                      onClick={() => handlePayment('PIX')}
+                      disabled={loading}
+                      className="w-full font-bold bg-emerald-500 hover:bg-emerald-600 text-white py-3 rounded-xl shadow-lg glow-hover transition-all flex items-center justify-center gap-1.5 outline-none"
+                    >
+                      {loading ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      ) : (
+                        <><Check className="w-4.5 h-4.5" /> Confirmar Pagamento Pix</>
+                      )}
+                    </button>
+                  </div>
                 )}
-              </button>
+
+                {/* Stripe Checkout */}
+                {activeTab === 'stripe' && (
+                  <div className="space-y-4 animate-in fade-in duration-200">
+                    <div className="bg-foreground/3 p-4 rounded-2xl border border-border/50 space-y-3">
+                      <h4 className="font-extrabold text-xs flex items-center gap-1">
+                        <ShieldCheck className="w-4 h-4 text-primary" /> Checkout Seguro (Stripe)
+                      </h4>
+                      
+                      <div className="grid grid-cols-12 gap-3">
+                        <div className="col-span-12">
+                          <label className="block text-[9px] uppercase font-bold text-muted-foreground mb-1">Número do Cartão</label>
+                          <input
+                            type="text"
+                            maxLength={19}
+                            placeholder="4000 1234 5678 9010"
+                            value={cardNumber}
+                            onChange={(e) => setCardNumber(e.target.value.replace(/\D/g, '').replace(/(\d{4})(?=\d)/g, '$1 '))}
+                            className="w-full bg-background border border-border focus:border-primary focus:ring-1 focus:ring-primary rounded-lg py-2 px-3 text-xs outline-none transition-all placeholder:opacity-30"
+                            required
+                          />
+                        </div>
+
+                        <div className="col-span-6">
+                          <label className="block text-[9px] uppercase font-bold text-muted-foreground mb-1">Validade</label>
+                          <input
+                            type="text"
+                            maxLength={5}
+                            placeholder="MM/AA"
+                            value={cardExpiry}
+                            onChange={(e) => setCardExpiry(e.target.value.replace(/\D/g, '').replace(/(\d{2})(?=\d)/g, '$1/'))}
+                            className="w-full bg-background border border-border focus:border-primary focus:ring-1 focus:ring-primary rounded-lg py-2 px-3 text-xs outline-none transition-all placeholder:opacity-30"
+                            required
+                          />
+                        </div>
+
+                        <div className="col-span-6">
+                          <label className="block text-[9px] uppercase font-bold text-muted-foreground mb-1">CVV</label>
+                          <input
+                            type="text"
+                            maxLength={4}
+                            placeholder="123"
+                            value={cardCvv}
+                            onChange={(e) => setCardCvv(e.target.value.replace(/\D/g, ''))}
+                            className="w-full bg-background border border-border focus:border-primary focus:ring-1 focus:ring-primary rounded-lg py-2 px-3 text-xs outline-none transition-all placeholder:opacity-30"
+                            required
+                          />
+                        </div>
+
+                        <div className="col-span-12">
+                          <label className="block text-[9px] uppercase font-bold text-muted-foreground mb-1">Nome Impresso no Cartão</label>
+                          <input
+                            type="text"
+                            placeholder="Ex: JOÃO A SILVA"
+                            value={cardName}
+                            onChange={(e) => setCardName(e.target.value.toUpperCase())}
+                            className="w-full bg-background border border-border focus:border-primary focus:ring-1 focus:ring-primary rounded-lg py-2 px-3 text-xs outline-none transition-all placeholder:opacity-30"
+                            required
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    <button
+                      onClick={() => handlePayment('CREDIT_CARD')}
+                      disabled={loading || cardNumber.length < 15 || cardExpiry.length < 5 || cardCvv.length < 3 || !cardName}
+                      className="w-full font-bold bg-primary hover:bg-primary/95 text-white py-3 rounded-xl shadow-lg glow-hover transition-all flex items-center justify-center gap-1.5 disabled:opacity-50 outline-none"
+                    >
+                      {loading ? (
+                        <><Loader2 className="w-4.5 h-4.5 animate-spin" /> Conectando ao Stripe...</>
+                      ) : (
+                        <><Lock className="w-4 h-4" /> Pagar R$ 9,90 com Stripe</>
+                      )}
+                    </button>
+                  </div>
+                )}
+              </div>
             ) : (
               <button
                 onClick={handleCancel}
                 disabled={simulating !== null}
-                className="font-bold border border-rose-500/20 text-rose-500 hover:bg-rose-500/5 px-8 py-3.5 rounded-xl transition-all flex items-center justify-center gap-2 outline-none"
+                className="font-bold border border-rose-500/20 text-rose-500 hover:bg-rose-500/5 px-8 py-3.5 rounded-xl transition-all flex items-center justify-center gap-2 outline-none w-full sm:w-auto"
               >
                 {simulating === 'cancel' ? (
                   <Loader2 className="w-4 h-4 animate-spin" />

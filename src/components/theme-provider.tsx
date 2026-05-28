@@ -12,7 +12,7 @@ type ThemeContextType = {
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [theme, setTheme] = useState<Theme>('dark'); // Dark por padrão para visual premium
+  const [theme, setTheme] = useState<Theme>('light'); // Light por padrão para visual limpo Google
 
   useEffect(() => {
     const savedTheme = localStorage.getItem('avaliapro_theme') as Theme | null;
@@ -20,7 +20,8 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
       setTheme(savedTheme);
       document.documentElement.className = savedTheme;
     } else {
-      document.documentElement.className = 'dark';
+      setTheme('light');
+      document.documentElement.className = 'light';
     }
   }, []);
 

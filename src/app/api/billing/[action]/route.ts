@@ -40,7 +40,7 @@ export async function POST(
           subscriptionId,
           amount: 9.90,
           status: 'APPROVED',
-          gateway: paymentMethod === 'PIX' ? 'MERCADOPAGO' : 'STRIPE',
+          gateway: paymentMethod === 'PIX' ? 'PIX' : 'STRIPE',
         },
       });
 
