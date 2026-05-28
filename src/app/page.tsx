@@ -75,7 +75,7 @@ export default function LandingPage() {
             <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-primary to-secondary flex items-center justify-center shadow-lg group-hover:scale-105 transition-transform duration-300">
               <Star className="w-5 h-5 text-white fill-white animate-pulse" />
             </div>
-            <span className="text-2xl font-extrabold tracking-tight bg-gradient-to-r from-foreground via-foreground/90 to-primary bg-clip-text text-transparent">
+            <span className="text-2xl font-extrabold tracking-tight text-foreground">
               Avalia<span className="text-primary font-bold">Pro</span>
             </span>
           </Link>
@@ -134,7 +134,7 @@ export default function LandingPage() {
                 <Sparkles className="w-3.5 h-3.5" /> Transforme Clientes em Promotores Digitais
               </div>
               <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight leading-[1.1] mb-6">
-                Aumente Suas Avaliações no <span className="bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">Google em 5x</span> Sem Risco de Notas Ruins
+                Aumente Suas Avaliações no <span className="bg-gradient-to-r from-primary to-indigo-600 bg-clip-text text-transparent">Google em 5x</span> Sem Risco de Notas Ruins
               </h1>
               <p className="text-lg text-muted-foreground max-w-2xl mb-8 leading-relaxed">
                 Gere QR Codes e páginas personalizadas para incentivar avaliações 5 estrelas. Nosso filtro inteligente envia elogios direto para o Google e retém as reclamações em um formulário privado só para você ler.
