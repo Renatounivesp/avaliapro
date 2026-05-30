@@ -1,3 +1,4 @@
+import type { Metadata } from 'next';
 import { headers } from 'next/headers';
 import Link from 'next/link';
 import { db } from '@/lib/db';
@@ -5,6 +6,55 @@ import PublicReviewPage from '@/components/public-review-page';
 import { AlertCircle, ChevronLeft, Star } from 'lucide-react';
 
 export const dynamic = 'force-dynamic';
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}): Promise<Metadata> {
+  const { slug } = await params;
+  const company = await db.company.findUnique({
+    where: { slug },
+  });
+
+  if (!company) {
+    return {
+      title: 'AvaliaPro - Página de Avaliação',
+      description: 'Deixe seu feedback de forma rápida e segura.',
+    };
+  }
+
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://avaliaproo.vercel.app';
+  const imageUrl = `${appUrl}/og-image.png`;
+  const descriptionText = company.customPhrase || `Sua opinião é muito importante para nós! Deixe seu feedback sobre o ${company.name} de forma rápida e segura.`;
+
+  return {
+    title: `Avaliar ${company.name} - AvaliaPro`,
+    description: descriptionText,
+    openGraph: {
+      title: `Avaliar ${company.name} - AvaliaPro`,
+      description: descriptionText,
+      url: `${appUrl}/p/${slug}`,
+      siteName: 'AvaliaPro',
+      images: [
+        {
+          url: imageUrl,
+          width: 1200,
+          height: 630,
+          alt: `Avaliação do ${company.name}`,
+        },
+      ],
+      locale: 'pt-BR',
+      type: 'website',
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: `Avaliar ${company.name} - AvaliaPro`,
+      description: descriptionText,
+      images: [imageUrl],
+    },
+  };
+}
 
 export default async function PublicPage({
   params,
