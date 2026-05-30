@@ -16,12 +16,15 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     const savedTheme = localStorage.getItem('avaliapro_theme') as Theme | null;
-    if (savedTheme) {
-      setTheme(savedTheme);
-      document.documentElement.className = savedTheme;
+    const activeTheme = savedTheme || 'light';
+    setTheme(activeTheme);
+    
+    if (activeTheme === 'dark') {
+      document.documentElement.classList.add('dark');
+      document.documentElement.classList.remove('light');
     } else {
-      setTheme('light');
-      document.documentElement.className = 'light';
+      document.documentElement.classList.add('light');
+      document.documentElement.classList.remove('dark');
     }
   }, []);
 
@@ -29,12 +32,19 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     const newTheme = theme === 'light' ? 'dark' : 'light';
     setTheme(newTheme);
     localStorage.setItem('avaliapro_theme', newTheme);
-    document.documentElement.className = newTheme;
+    
+    if (newTheme === 'dark') {
+      document.documentElement.classList.add('dark');
+      document.documentElement.classList.remove('light');
+    } else {
+      document.documentElement.classList.add('light');
+      document.documentElement.classList.remove('dark');
+    }
   };
 
   return (
     <ThemeContext.Provider value={{ theme, toggleTheme }}>
-      <div className="transition-theme min-h-screen bg-background text-foreground">
+      <div className="min-h-screen bg-background text-foreground">
         {children}
       </div>
     </ThemeContext.Provider>
