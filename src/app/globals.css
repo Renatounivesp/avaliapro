@@ -277,3 +277,14 @@ body {
   transform: scale(1.02);
 }
 
+/* Feedback visual tátil e físico instantâneo para todos os cliques rápidos (Snappy UI) */
+button:active,
+a:active,
+.cursor-pointer:active,
+[role="button"]:active {
+  transform: scale(0.96) !important;
+  opacity: 0.88 !important;
+  transition: transform 0.05s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.05s ease !important;
+}
+
+

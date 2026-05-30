@@ -68,24 +68,22 @@ export default function PublicReviewPage({ company, device }: PublicReviewPagePr
   const [error, setError] = useState('');
 
   // 1. Trata clique nos Emojis
-  const handleRatingClick = async (rating: 'EXCELENTE' | 'BOA' | 'RUIM' | 'PESSIMA') => {
+  const handleRatingClick = (rating: 'EXCELENTE' | 'BOA' | 'RUIM' | 'PESSIMA') => {
     setSelectedRating(rating);
     const isPositive = rating === 'EXCELENTE' || rating === 'BOA';
 
-    try {
-      // Registra clique no analítico de forma silenciosa
-      await fetch('/api/feedback/click', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          companyId: company.id,
-          rating,
-          device,
-        }),
-      });
-    } catch (err) {
+    // Registra clique no analítico de forma silenciosa no background (sem bloquear a UI)
+    fetch('/api/feedback/click', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        companyId: company.id,
+        rating,
+        device,
+      }),
+    }).catch((err) => {
       console.error('Erro ao registrar clique de analítico:', err);
-    }
+    });
 
     if (isPositive) {
       // Redireciona direto para o Google Reviews
