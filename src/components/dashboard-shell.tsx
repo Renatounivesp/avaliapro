@@ -78,8 +78,8 @@ export default function DashboardShell({ children, user }: DashboardShellProps) 
         <div className="space-y-6">
           {/* LOGO */}
           <Link href="/" className="flex items-center gap-2 group px-2">
-            <div className="w-9 h-9 rounded-lg bg-gradient-to-tr from-primary to-secondary flex items-center justify-center shadow-md">
-              <Star className="w-4 h-4 text-white fill-white" />
+            <div className="w-9 h-9 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center shadow-md">
+              <Star className="w-4 h-4 text-primary fill-primary" />
             </div>
             <span className="font-extrabold text-xl tracking-tight text-foreground">
               Avalia<span className="text-primary font-bold">Pro</span>
@@ -154,9 +154,9 @@ export default function DashboardShell({ children, user }: DashboardShellProps) 
           <div className="w-72 bg-sidebar p-6 flex flex-col justify-between h-full shadow-2xl animate-in slide-in-from-left duration-300">
             <div className="space-y-6">
               <div className="flex justify-between items-center">
-                <Link href="/" className="flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-primary to-secondary flex items-center justify-center">
-                    <Star className="w-4 h-4 text-white fill-white" />
+                 <Link href="/" className="flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center">
+                    <Star className="w-4 h-4 text-primary fill-primary" />
                   </div>
                   <span className="font-extrabold text-lg text-foreground">Avalia<span className="text-primary">Pro</span></span>
                 </Link>
@@ -235,8 +235,8 @@ export default function DashboardShell({ children, user }: DashboardShellProps) 
           </button>
           
           <Link href="/" className="flex items-center gap-1.5">
-            <div className="w-7 h-7 rounded-lg bg-gradient-to-tr from-primary to-secondary flex items-center justify-center">
-              <Star className="w-3.5 h-3.5 text-white fill-white" />
+            <div className="w-7 h-7 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center">
+              <Star className="w-3.5 h-3.5 text-primary fill-primary" />
             </div>
             <span className="font-extrabold text-md tracking-tight text-foreground">Avalia<span className="text-primary font-bold">Pro</span></span>
           </Link>

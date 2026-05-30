@@ -99,8 +99,8 @@ export default function RegisterPage() {
         {/* LOGO */}
         <div className="text-center mb-8 flex flex-col items-center">
           <Link href="/" className="flex items-center gap-2 group mb-2">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-primary to-secondary flex items-center justify-center shadow-lg group-hover:scale-105 transition-transform duration-300">
-              <Star className="w-5 h-5 text-white fill-white" />
+            <div className="w-10 h-10 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center shadow-md group-hover:scale-105 transition-transform duration-300">
+              <Star className="w-5 h-5 text-primary fill-primary" />
             </div>
             <span className="text-2xl font-extrabold tracking-tight text-foreground">
               Avalia<span className="text-primary font-bold">Pro</span>
