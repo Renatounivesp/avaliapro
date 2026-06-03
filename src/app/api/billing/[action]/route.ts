@@ -16,6 +16,18 @@ export async function POST(
 
     const subscriptionId = user.subscription.id;
 
+    // --- VERIFICAR STATUS ---
+    if (action === 'status') {
+      const currentSub = await db.subscription.findUnique({
+        where: { id: subscriptionId },
+        select: {
+          status: true,
+          expiresAt: true,
+        },
+      });
+      return NextResponse.json({ success: true, status: currentSub?.status, expiresAt: currentSub?.expiresAt });
+    }
+
     // --- ASSINAR / PAGAR PLANO SIMULADO ---
     if (action === 'subscribe') {
       const { paymentMethod } = await request.json(); // "PIX" | "CREDIT_CARD"

@@ -9,7 +9,10 @@ import {
   Loader2,
   Info,
   Copy,
-  Check
+  Check,
+  QrCode,
+  CreditCard,
+  ArrowLeft
 } from 'lucide-react';
 
 interface Payment {
@@ -38,11 +41,15 @@ export default function BillingControl({ subscription }: BillingControlProps) {
   const [pixCopied, setPixCopied] = useState(false);
   const [simulating, setSimulating] = useState<string | null>(null);
 
+  // Estados para Pix real e Checkout
+  const [realPix, setRealPix] = useState<{ qrCode: string; qrCodeBase64: string; paymentId: string } | null>(null);
+  const [generatingPix, setGeneratingPix] = useState(false);
+  const [verifyingPayment, setVerifyingPayment] = useState(false);
+  const [preferenceLoading, setPreferenceLoading] = useState(false);
+  const [verificationError, setVerificationError] = useState<string | null>(null);
+
   const subStatus = subscription.status;
   const isSubActive = subStatus === 'ACTIVE';
-
-  const PIX_KEY = '+5512981348331';
-  const PIX_CODE = '00020101021126400014br.gov.bcb.pix0114+551298134833152040000530398654049.905802BR5915AvaliaPro SaaS6009Sao Paulo62070503***6304F37C';
 
   useEffect(() => {
     if (searchParams.get('status') === 'success') {
@@ -51,35 +58,95 @@ export default function BillingControl({ subscription }: BillingControlProps) {
     }
   }, [searchParams]);
 
-  // Executa a confirmação do Pix
-  const handlePayment = async () => {
-    setLoading(true);
-    
-    try {
-      const response = await fetch('/api/billing/subscribe', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ paymentMethod: 'PIX' }),
-      });
-      
-      const data = await response.json();
+  // Polling automático a cada 5 segundos enquanto o Pix real estiver ativo
+  useEffect(() => {
+    if (!realPix || isSubActive) return;
 
-      if (response.ok) {
-        setSuccessMsg(true);
-        router.refresh();
+    const interval = setInterval(() => {
+      handleVerifyPayment(true);
+    }, 5000);
+
+    return () => clearInterval(interval);
+  }, [realPix, isSubActive]);
+
+  // Gera o Pix em tempo real usando o Mercado Pago
+  const handleGeneratePix = async () => {
+    setGeneratingPix(true);
+    setVerificationError(null);
+    try {
+      const response = await fetch('/api/billing/pix/create', {
+        method: 'POST',
+      });
+      const data = await response.json();
+      if (response.ok && data.success) {
+        setRealPix({
+          qrCode: data.qrCode,
+          qrCodeBase64: data.qrCodeBase64,
+          paymentId: data.paymentId,
+        });
       } else {
-        alert('Erro ao processar pagamento: ' + (data.error || 'Erro desconhecido.'));
+        alert(data.error || 'Erro ao gerar QR Code do Pix.');
       }
     } catch (err) {
       console.error(err);
-      alert('Erro ao conectar com o servidor.');
+      alert('Erro ao conectar com o servidor para gerar o Pix.');
     } finally {
-      setLoading(false);
+      setGeneratingPix(false);
+    }
+  };
+
+  // Verifica o status do pagamento no banco de dados
+  const handleVerifyPayment = async (silent = false) => {
+    if (!silent) setVerifyingPayment(true);
+    setVerificationError(null);
+    try {
+      const response = await fetch('/api/billing/status', {
+        method: 'POST',
+      });
+      const data = await response.json();
+      if (response.ok && data.success) {
+        if (data.status === 'ACTIVE') {
+          setSuccessMsg(true);
+          setRealPix(null);
+          router.refresh();
+        } else if (!silent) {
+          setVerificationError('Pagamento ainda não detectado. Se você já pagou, aguarde alguns segundos e clique novamente.');
+        }
+      } else if (!silent) {
+        setVerificationError('Erro ao verificar status da assinatura.');
+      }
+    } catch (err) {
+      console.error(err);
+      if (!silent) setVerificationError('Erro de conexão ao verificar o status.');
+    } finally {
+      if (!silent) setVerifyingPayment(false);
+    }
+  };
+
+  // Inicia checkout do Mercado Pago (Checkout Pro)
+  const handleCheckoutPro = async () => {
+    setPreferenceLoading(true);
+    try {
+      const response = await fetch('/api/billing/mercado-pago/create', {
+        method: 'POST',
+      });
+      const data = await response.json();
+      if (response.ok && data.init_point) {
+        window.location.href = data.init_point;
+      } else {
+        alert(data.error || 'Erro ao criar preferência de pagamento.');
+      }
+    } catch (err) {
+      console.error(err);
+      alert('Erro ao conectar com o servidor para iniciar checkout.');
+    } finally {
+      setPreferenceLoading(false);
     }
   };
 
   const handleCopyPix = () => {
-    navigator.clipboard.writeText(PIX_CODE);
+    if (!realPix) return;
+    navigator.clipboard.writeText(realPix.qrCode);
     setPixCopied(true);
     setTimeout(() => setPixCopied(false), 2000);
   };
@@ -188,78 +255,114 @@ export default function BillingControl({ subscription }: BillingControlProps) {
           <div className="mt-6 space-y-6">
             {!isSubActive ? (
               <div className="space-y-4">
-                {/* Pix Checkout */}
-                <div className="space-y-4 animate-in fade-in duration-200">
-                  <div className="flex flex-col sm:flex-row gap-4 items-center bg-foreground/3 p-4 rounded-2xl border border-border/50">
-                    {/* Pix QR Code Mockup */}
-                    <div className="w-24 h-24 bg-white rounded-xl p-2 border border-border flex items-center justify-center shadow-inner shrink-0 relative">
-                      <svg viewBox="0 0 100 100" className="w-full h-full text-black">
-                        <rect x="0" y="0" width="25" height="25" fill="currentColor" />
-                        <rect x="3.5" y="3.5" width="18" height="18" fill="white" />
-                        <rect x="7" y="7" width="11" height="11" fill="currentColor" />
+                {!realPix ? (
+                  // Opções de Pagamento (Pix ou Cartão)
+                  <div className="grid sm:grid-cols-2 gap-4 animate-in fade-in duration-200">
+                    <button
+                      onClick={handleGeneratePix}
+                      disabled={generatingPix || preferenceLoading}
+                      className="flex flex-col items-center justify-center gap-3 p-6 bg-foreground/3 border border-border hover:bg-foreground/5 hover:border-emerald-500/40 rounded-2xl transition-all cursor-pointer group outline-none"
+                    >
+                      <div className="p-3 bg-emerald-500/10 text-emerald-500 rounded-xl group-hover:scale-110 transition-transform">
+                        <QrCode className="w-6 h-6" />
+                      </div>
+                      <div className="text-center">
+                        <div className="font-bold text-sm text-foreground">Pagar com Pix</div>
+                        <div className="text-[10px] text-muted-foreground mt-1">Liberação imediata 24h</div>
+                      </div>
+                      {generatingPix && <Loader2 className="w-4 h-4 animate-spin text-emerald-500" />}
+                    </button>
+
+                    <button
+                      onClick={handleCheckoutPro}
+                      disabled={generatingPix || preferenceLoading}
+                      className="flex flex-col items-center justify-center gap-3 p-6 bg-foreground/3 border border-border hover:bg-foreground/5 hover:border-primary/40 rounded-2xl transition-all cursor-pointer group outline-none"
+                    >
+                      <div className="p-3 bg-primary/10 text-primary rounded-xl group-hover:scale-110 transition-transform">
+                        <CreditCard className="w-6 h-6" />
+                      </div>
+                      <div className="text-center">
+                        <div className="font-bold text-sm text-foreground">Cartão ou Boleto</div>
+                        <div className="text-[10px] text-muted-foreground mt-1">Checkout Mercado Pago</div>
+                      </div>
+                      {preferenceLoading && <Loader2 className="w-4 h-4 animate-spin text-primary" />}
+                    </button>
+                  </div>
+                ) : (
+                  // Pix Ativo para Pagamento
+                  <div className="space-y-4 animate-in fade-in duration-200">
+                    <div className="flex flex-col sm:flex-row gap-4 items-center bg-foreground/3 p-4 rounded-2xl border border-border/50">
+                      
+                      {/* Pix QR Code Real */}
+                      <div className="w-28 h-28 bg-white rounded-xl p-2 border border-border flex items-center justify-center shadow-inner shrink-0 relative overflow-hidden">
+                        <img 
+                          src={`data:image/png;base64,${realPix.qrCodeBase64}`} 
+                          alt="Mercado Pago QR Code Pix" 
+                          className="w-full h-full object-contain"
+                        />
+                      </div>
+                      
+                      <div className="space-y-1.5 flex-grow w-full">
+                        <h4 className="font-extrabold text-xs">Escaneie o QR Code Pix</h4>
+                        <p className="text-[10px] text-muted-foreground leading-relaxed">
+                          Abra o app do seu banco, escolha pagar via Pix e aponte a câmera para o QR Code. Ou copie o código abaixo para pagar via "Pix Copia e Cola".
+                        </p>
                         
-                        <rect x="75" y="0" width="25" height="25" fill="currentColor" />
-                        <rect x="78.5" y="3.5" width="18" height="18" fill="white" />
-                        <rect x="82" y="7" width="11" height="11" fill="currentColor" />
-                        
-                        <rect x="0" y="75" width="25" height="25" fill="currentColor" />
-                        <rect x="3.5" y="78.5" width="18" height="18" fill="white" />
-                        <rect x="7" y="82" width="11" height="11" fill="currentColor" />
-                        
-                        <rect x="30" y="5" width="8" height="15" fill="currentColor" />
-                        <rect x="45" y="20" width="10" height="8" fill="currentColor" />
-                        <rect x="40" y="35" width="8" height="12" fill="currentColor" />
-                        <rect x="65" y="30" width="8" height="15" fill="currentColor" />
-                        <rect x="5" y="35" width="12" height="8" fill="currentColor" />
-                        <rect x="30" y="55" width="15" height="8" fill="currentColor" />
-                        <rect x="55" y="55" width="15" height="15" fill="currentColor" />
-                        <rect x="60" y="60" width="5" height="5" fill="white" />
-                      </svg>
-                      <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                        <div className="bg-white p-1 rounded-md border border-border/80 shadow-md">
-                          <span className="text-[7px] font-extrabold text-emerald-600 tracking-tighter">PIX</span>
+                        <div className="flex gap-1.5 items-center">
+                          <input
+                            type="text"
+                            readOnly
+                            value={realPix.qrCode}
+                            onClick={(e) => (e.target as HTMLInputElement).select()}
+                            className="flex-grow bg-background/50 border border-border rounded-lg py-1 px-2.5 text-[9px] font-mono text-muted-foreground outline-none select-all"
+                          />
+                          <button
+                            type="button"
+                            onClick={handleCopyPix}
+                            className="bg-foreground/5 hover:bg-foreground/10 text-foreground py-1 px-3.5 rounded-lg border border-border text-[10px] font-bold shrink-0 flex items-center gap-1 transition-all outline-none cursor-pointer"
+                          >
+                            {pixCopied ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5 text-muted-foreground" />}
+                            {pixCopied ? 'Copiado' : 'Copiar'}
+                          </button>
                         </div>
                       </div>
                     </div>
-                    
-                    <div className="space-y-1.5 flex-grow w-full">
-                      <h4 className="font-extrabold text-xs">Pagar com Pix</h4>
-                      <p className="text-[10px] text-muted-foreground leading-relaxed">
-                        Escaneie o QR Code ou copie o código Pix abaixo. O pagamento de <strong>R$ 9,90</strong> será destinado para a chave Pix celular: <strong>+55 (12) 98134-8331</strong> (Nubank). Após pagar, clique em confirmar para ativar sua conta na hora.
-                      </p>
-                      
-                      <div className="flex gap-1.5 items-center">
-                        <input
-                          type="text"
-                          readOnly
-                          value={PIX_CODE}
-                          onClick={(e) => (e.target as HTMLInputElement).select()}
-                          className="flex-grow bg-background/50 border border-border rounded-lg py-1 px-2.5 text-[9px] font-mono text-muted-foreground outline-none select-all"
-                        />
-                        <button
-                          type="button"
-                          onClick={handleCopyPix}
-                          className="bg-foreground/5 hover:bg-foreground/10 text-foreground py-1 px-3.5 rounded-lg border border-border text-[10px] font-bold shrink-0 flex items-center gap-1 transition-all outline-none"
-                        >
-                          {pixCopied ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5 text-muted-foreground" />}
-                          {pixCopied ? 'Copiado' : 'Copiar'}
-                        </button>
+
+                    {verificationError && (
+                      <div className="text-[10px] text-rose-500 bg-rose-500/10 border border-rose-500/20 p-2.5 rounded-xl flex items-center gap-1.5">
+                        <Info className="w-4 h-4 shrink-0" />
+                        <span>{verificationError}</span>
                       </div>
+                    )}
+
+                    <div className="flex flex-col sm:flex-row gap-3">
+                      <button
+                        onClick={() => handleVerifyPayment(false)}
+                        disabled={verifyingPayment}
+                        className="flex-1 font-bold bg-emerald-500 hover:bg-emerald-600 text-white py-3 rounded-xl shadow-lg glow-hover transition-all flex items-center justify-center gap-1.5 outline-none cursor-pointer disabled:opacity-50"
+                      >
+                        {verifyingPayment ? (
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                        ) : (
+                          <><Check className="w-4.5 h-4.5" /> Já paguei, verificar agora</>
+                        )}
+                      </button>
+                      
+                      <button
+                        onClick={() => setRealPix(null)}
+                        disabled={verifyingPayment}
+                        className="font-bold border border-border hover:bg-foreground/5 text-muted-foreground py-3 px-5 rounded-xl transition-all flex items-center justify-center gap-1.5 outline-none cursor-pointer"
+                      >
+                        <ArrowLeft className="w-4 h-4" /> Voltar
+                      </button>
+                    </div>
+
+                    <div className="text-[10px] text-muted-foreground leading-relaxed p-2.5 bg-foreground/2 rounded-xl border border-border/50 flex items-start gap-1.5 justify-center">
+                      <Loader2 className="w-3.5 h-3.5 animate-spin text-emerald-500 shrink-0" />
+                      <span>Verificando o pagamento automaticamente a cada 5 segundos...</span>
                     </div>
                   </div>
-
-                  <button
-                    onClick={handlePayment}
-                    disabled={loading}
-                    className="w-full font-bold bg-emerald-500 hover:bg-emerald-600 text-white py-3 rounded-xl shadow-lg glow-hover transition-all flex items-center justify-center gap-1.5 outline-none"
-                  >
-                    {loading ? (
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                    ) : (
-                      <><Check className="w-4.5 h-4.5" /> Confirmar Pagamento Pix</>
-                    )}
-                  </button>
-                </div>
+                 )}
               </div>
             ) : (
               <button
